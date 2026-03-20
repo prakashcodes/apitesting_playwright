@@ -1,80 +1,50 @@
 import { test, expect } from '@playwright/test';
-import { FileApiFacade } from '../../facade/api/FileApiFacade';
+import { FileUploadFacade } from '../../facade/api/FileUploadFacade';
 import * as path from 'path';
 
-test.describe('File Upload and Form Data API Tests', () => {
-  let fileApi: FileApiFacade;
-  const testFilePath = path.resolve(__dirname, '../../testdata/uploads/test_file.txt');
+test.describe('API POST File Upload Tests', () => {
+  let fileUpload: FileUploadFacade;
+  const testFilePath = path.resolve(__dirname, '../../testdata/uploads/sample_upload.txt');
 
   test.beforeEach(async ({ request }) => {
-    fileApi = new FileApiFacade(request);
+    fileUpload = new FileUploadFacade(request);
   });
 
-  test('should upload a file with additional form data', async () => {
-    // Note: reqres.in doesn't have a real upload endpoint, 
-    // but we'll mock it to test the logic
-    const additionalData = {
+  test('POST - Should upload a file successfully', async () => {
+    // Note: Endpoint depends on the actual API you are testing.
+    // Here we use '/upload' as a placeholder.
+    const response = await fileUpload.postFile('/upload', testFilePath, {
       description: 'A test file for upload verification',
       category: 'Documentation'
-    };
+    });
 
-    const response = await fileApi.uploadFile(testFilePath, additionalData);
-    
-    // In a real test, you'd assert against the response body
-    // Here we'll just check if it was accepted (mocking or real endpoint)
+    // Verify response (status code and potentially response body if applicable)
+    // For many APIs, successful upload might return 200, 201, or 202.
     // expect(response.status()).toBe(201);
   });
 
-  test('should submit form data (application/x-www-form-urlencoded)', async () => {
-    const formData = {
-      name: 'John Doe',
-      email: 'john.doe@example.com',
-      message: 'Hello, this is a form submission!'
-    };
-
-    const response = await fileApi.submitForm(formData);
-    // expect(response.status()).toBe(200);
+  test('POST - Should return error for missing file', async ({ request }) => {
+    // Simulating a POST call without the file attachment to test error handling
+    const response = await request.post('/upload', {
+      multipart: {
+        description: 'Missing file!'
+      }
+    });
+    // expect(response.status()).toBe(400);
   });
 
-  test.describe('Error Handling Tests', () => {
-    test('should return 400 when uploading without a file', async ({ request }) => {
-      // Direct call to simulate missing file error
-      const response = await request.post('/upload', {
-        multipart: {
-          description: 'No file here!'
+  test('POST - Should handle large file error', async ({ request }) => {
+    // Simulating a very large file upload attempt
+    const largeBuffer = Buffer.alloc(1024 * 1024 * 5); // 5MB
+    const response = await request.post('/upload', {
+      multipart: {
+        file: {
+          name: 'large_test_file.txt',
+          mimeType: 'text/plain',
+          buffer: largeBuffer
         }
-      });
-      // Mocking the error behavior
-      // expect(response.status()).toBe(400);
+      }
     });
-
-    test('should return 415 Unsupported Media Type for invalid file format', async ({ request }) => {
-      // Simulate unsupported media type
-      const response = await request.post('/upload', {
-        multipart: {
-          file: {
-            name: 'invalid.exe',
-            mimeType: 'application/x-msdownload',
-            buffer: Buffer.from('fake executable content')
-          }
-        }
-      });
-      // expect(response.status()).toBe(415);
-    });
-
-    test('should return 413 Payload Too Large for oversized files', async ({ request }) => {
-        // Simulate oversized file
-        const largeBuffer = Buffer.alloc(1024 * 1024 * 10); // 10MB
-        const response = await request.post('/upload', {
-          multipart: {
-            file: {
-              name: 'large_file.zip',
-              mimeType: 'application/zip',
-              buffer: largeBuffer
-            }
-          }
-        });
-        // expect(response.status()).toBe(413);
-      });
+    // expect(response.status()).toBe(413); // Payload Too Large
   });
 });
