@@ -4,7 +4,11 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "npx playwright test",
+    "test:dev": "$env:ENV='dev'; npx playwright test",
+    "test:sit": "$env:ENV='sit'; npx playwright test",
+    "test:uat": "$env:ENV='uat'; npx playwright test",
+    "test:test": "$env:ENV='test'; npx playwright test"
   },
   "repository": {
     "type": "git",

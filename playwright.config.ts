@@ -4,9 +4,11 @@ import * as path from 'path';
 
 /**
  * Read environment variables from file.
- * https://github.com/motdotla/dotenv
+ * Load .env.{ENV} if provided, else load .env
  */
-dotenv.config({ path: path.resolve(__dirname, '.env') });
+const env = process.env.ENV || 'dev';
+dotenv.config({ path: path.resolve(__dirname, `.env.${env}`) });
+dotenv.config({ path: path.resolve(__dirname, '.env') }); // Fallback to common .env if needed
 
 /**
  * See https://playwright.dev/docs/test-configuration.
@@ -27,6 +29,12 @@ export default defineConfig({
   use: {
     /* Base URL to use in actions like `await page.goto('/')`. */
     baseURL: process.env.BASE_URL || 'https://reqres.in/api',
+
+    /* Global Headers (useful for API Key authentication) */
+    extraHTTPHeaders: {
+      'x-api-key': process.env.API_KEY || '',
+      'Accept': 'application/json',
+    },
 
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: 'on-first-retry',

@@ -14,20 +14,23 @@ export class FileUploadFacade {
    * @param endpoint - The API endpoint to call.
    * @param filePath - The absolute path to the file to upload.
    * @param additionalFields - Optional extra form fields to include in the request.
+   * @param token - Optional Bearer token for authentication.
    */
   async postFile(
     endpoint: string, 
     filePath: string, 
-    additionalFields: Record<string, string | number | boolean> = {}
+    additionalFields: Record<string, string | number | boolean> = {},
+    token?: string
   ): Promise<APIResponse> {
     const fileName = path.basename(filePath);
     const fileBuffer = fs.readFileSync(filePath);
 
     return await this.request.post(endpoint, {
+      headers: token ? { 'Authorization': `Bearer ${token}` } : {},
       multipart: {
         file: {
           name: fileName,
-          mimeType: 'application/octet-stream', // Default mime type, can be customized if needed
+          mimeType: 'application/octet-stream',
           buffer: fileBuffer,
         },
         ...additionalFields,

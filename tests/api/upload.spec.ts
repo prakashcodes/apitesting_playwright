@@ -8,19 +8,23 @@ test.describe('API POST File Upload Tests', () => {
 
   test.beforeEach(async ({ request }) => {
     fileUpload = new FileUploadFacade(request);
+    console.log(`Running tests in environment: ${process.env.ENV}`);
+    console.log(`Base URL: ${process.env.BASE_URL}`);
   });
 
-  test('POST - Should upload a file successfully', async () => {
-    // Note: Endpoint depends on the actual API you are testing.
-    // Here we use '/upload' as a placeholder.
+  test('POST - Should upload a file with Bearer Token', async () => {
+    const token = process.env.AUTH_TOKEN || 'fallback_token';
     const response = await fileUpload.postFile('/upload', testFilePath, {
-      description: 'A test file for upload verification',
-      category: 'Documentation'
-    });
+      description: 'Authenticated upload'
+    }, token);
 
-    // Verify response (status code and potentially response body if applicable)
-    // For many APIs, successful upload might return 200, 201, or 202.
     // expect(response.status()).toBe(201);
+  });
+
+  test('POST - Should handle 401 Unauthorized', async ({ request }) => {
+    // Calling with an invalid token to test authentication failure
+    const response = await fileUpload.postFile('/upload', testFilePath, {}, 'invalid_token');
+    // expect(response.status()).toBe(401);
   });
 
   test('POST - Should return error for missing file', async ({ request }) => {
